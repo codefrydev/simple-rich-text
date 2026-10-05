@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanilla Rich Text Editor</title>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --border-color: #cbd5e1;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --panel-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #e2e8f0;
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--panel-bg);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .editor-wrapper {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toolbar {
+            background-color: var(--bg-color);
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar button {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toolbar button:hover {
+            background-color: #e2e8f0;
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+            margin: 0 4px;
+        }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .color-picker-group input[type="color"] {
+            border: none;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+        }
+
+        .link-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 4px;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+
+        .link-group input[type="text"] {
+            border: none;
+            outline: none;
+            padding: 6px;
+            font-size: 14px;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+
+        .link-group button {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+        
+        .link-group button:hover {
+            background: var(--primary-hover);
+        }
+
+        .editor-content {
+            min-height: 300px;
+            padding: 16px;
+            outline: none;
+            line-height: 1.6;
+            overflow-y: auto;
+            background: #fff;
+        }
+
+        .editor-content a {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        /* FIX: If a link is wrapped in a color formatting span/font by the editor, inherit that color */
+        .editor-content span > a,
+        .editor-content font > a,
+        .editor-content [style*="color"] > a {
+            color: inherit;
+        }
+
+        .editor-content[placeholder]:empty:before {
+            content: attr(placeholder);
+            color: #94a3b8;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* HTML Source Code Textarea */
+        .source-code {
+            display: none;
+            width: 100%;
+            min-height: 300px;
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border: none;
+            outline: none;
+            resize: vertical;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .actions-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-toggle {
+            background-color: var(--text-main);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-toggle:hover {
+            background-color: #334155;
+        }
+
+        .btn-copy {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-clear {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-clear:hover {
+            background-color: var(--bg-color);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: #1e293b;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Rich Text &amp; HTML Editor</h1>
+            <p>Design visually, pick colors, insert links, or toggle HTML source code.</p>
+        </div>
+
+        <div class="editor-wrapper">
+            <!-- Toolbar -->
+            <div class="toolbar" id="toolbar" style="opacity: 1; pointer-events: auto;">
+                <!-- Text Styles -->
+                <div class="toolbar-row">
+                    <button onclick="formatText('bold')" title="Bold"><b>B</b></button>
+                    <button onclick="formatText('italic')" title="Italic"><i>I</i></button>
+                    <button onclick="formatText('underline')" title="Underline"><u>U</u></button>
+                    <button onclick="formatText('strikeThrough')" title="Strikethrough"><s>S</s></button>
+                    <div class="divider"></div>
+                    <button onclick="formatText('removeFormat')">Clear Format</button>
+                </div>
+
+                <!-- Colors & Links -->
+                <div class="toolbar-row">
+                    <label class="color-picker-group" title="Text Color">
+                        Text <input type="color" id="textColor" oninput="formatText('foreColor', this.value)">
+                    </label>
+                    <label class="color-picker-group" title="Background Color">
+                        Highlight <input type="color" id="bgColor" oninput="formatText('hiliteColor', this.value)">
+                    </label>
+                    <div class="divider"></div>
+                    
+                    <div class="link-group">
+                        <input type="text" id="linkInput" placeholder="URL, mailto: or tel:" onfocus="saveSelection()">
+                        <button onclick="insertLink()">Add Link</button>
+                        <button onclick="formatText('unlink')" style="background: transparent; color: var(--text-main); border: 1px solid var(--border-color);">Unlink</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Editor Area -->
+            <div id="editor" class="editor-content" contenteditable="true" placeholder="Start typing here... 
+Example: Type 'Call us' -&gt; highlight it -&gt; type 'tel:+1234567890' in the link box -&gt; click 'Add Link'." style="display: block;"><span>
+  <a href="tel:+1234567890">Call</a>,
+  <a href="mailto:hello@example.com"><font color="#b61616">email</font></a>,
+  or
+  <a href="/enquiry" style="background-color: rgb(255, 255, 255);">fill in our enquiry form</a>
+  and tell us what you're looking for.
+</span>
+</div>
+            
+            <!-- Raw HTML Source Area -->
+            <textarea id="sourceCode" class="source-code" spellcheck="false" style="display: none;"></textarea>
+        </div>
+
+        <div class="actions">
+            <button class="btn-toggle" id="toggleViewBtn" onclick="toggleView()">View HTML Source</button>
+            <div class="actions-right">
+                <button class="btn-clear" onclick="clearEditor()">Clear</button>
+                <button class="btn-copy" onclick="copyContent()">Copy Output</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Action successful!</div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const sourceCode = document.getElementById('sourceCode');
+        const toast = document.getElementById('toast');
+        const toolbar = document.getElementById('toolbar');
+        const toggleViewBtn = document.getElementById('toggleViewBtn');
+        const linkInput = document.getElementById('linkInput');
+
+        let isSourceView = false;
+        let savedRange = null;
+
+        // Execute formatting commands
+        function formatText(command, value = null) {
+            if (isSourceView) return; // Disable toolbar in source view
+            
+            // CRITICAL FIX: Restore selection before applying formatting.
+            // Opening OS color pickers causes the browser to lose text highlight selection.
+            restoreSelection();
+            
+            // Standardizing background color command for different browsers
+            if (command === 'hiliteColor' && !document.queryCommandSupported('hiliteColor')) {
+                command = 'backColor';
+            }
+            
+            document.execCommand(command, false, value);
+            
+            // Save the newly formatted selection
+            saveSelection();
+            editor.focus();
+        }
+
+        // We need to save the selection before the user clicks into the link input box, 
+        // otherwise the browser forgets what text to turn into a link.
+        function saveSelection() {
+            if (window.getSelection) {
+                const sel = window.getSelection();
+                if (sel.getRangeAt && sel.rangeCount) {
+                    savedRange = sel.getRangeAt(0);
+                }
+            }
+        }
+
+        function restoreSelection() {
+            if (savedRange) {
+                if (window.getSelection) {
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(savedRange);
+                }
+            }
+        }
+
+        // Insert link logic
+        function insertLink() {
+            if (isSourceView) return;
+            
+            const url = linkInput.value.trim();
+            if (!url) {
+                showToast('Please enter a URL, mailto:, or tel: link');
+                return;
+            }
+
+            // Bring focus back to editor and restore the highlighted text
+            editor.focus();
+            restoreSelection();
+
+            // Apply the link
+            document.execCommand('createLink', false, url);
+            
+            // Clear input box
+            linkInput.value = '';
+            savedRange = null;
+        }
+
+        // Toggle between WYSIWYG and HTML Raw Source
+        function toggleView() {
+            if (isSourceView) {
+                // Switching back to visual editor
+                editor.innerHTML = sourceCode.value;
+                sourceCode.style.display = 'none';
+                editor.style.display = 'block';
+                toolbar.style.opacity = '1';
+                toolbar.style.pointerEvents = 'auto';
+                toggleViewBtn.textContent = 'View HTML Source';
+            } else {
+                // Switching to HTML source code view
+                // Clean up empty tags and format slightly if needed
+                let currentHTML = editor.innerHTML;
+                sourceCode.value = currentHTML;
+                
+                editor.style.display = 'none';
+                sourceCode.style.display = 'block';
+                toolbar.style.opacity = '0.5';
+                toolbar.style.pointerEvents = 'none';
+                toggleViewBtn.textContent = 'View Visual Editor';
+            }
+            isSourceView = !isSourceView;
+        }
+
+        function clearEditor() {
+            if (isSourceView) {
+                sourceCode.value = '';
+            } else {
+                editor.innerHTML = '';
+            }
+            showToast('Editor cleared');
+        }
+
+        // Copy content function 
+        async function copyContent() {
+            let html, plainText;
+
+            if (isSourceView) {
+                // If in source view, just copy the raw HTML code as text
+                plainText = sourceCode.value;
+                if (plainText.trim() === '') {
+                    showToast('Editor is empty!');
+                    return;
+                }
+                try {
+                    await navigator.clipboard.writeText(plainText);
+                    showToast('HTML Source copied!');
+                } catch (err) {
+                    showToast('Failed to copy');
+                }
+                return;
+            }
+
+            // If in visual view, copy both Rich Text and Plain text
+            html = editor.innerHTML;
+            plainText = editor.innerText;
+
+            if (plainText.trim() === '' && html.trim() === '') {
+                showToast('Editor is empty!');
+                return;
+            }
+
+            try {
+                const htmlBlob = new Blob([html], { type: 'text/html' });
+                const textBlob = new Blob([plainText], { type: 'text/plain' });
+                const clipboardItem = new ClipboardItem({
+                    'text/html': htmlBlob,
+                    'text/plain': textBlob
+                });
+
+                await navigator.clipboard.write([clipboardItem]);
+                showToast('Rich text copied successfully!');
+            } catch (err) {
+                console.warn('Clipboard API failed, falling back to basic text copy.', err);
+                try {
+                    await navigator.clipboard.writeText(plainText);
+                    showToast('Copied as plain text (browser limitation)');
+                } catch (fallbackErr) {
+                    showToast('Failed to copy content');
+                }
+            }
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Save selection whenever mouse is released inside editor
+        editor.addEventListener('mouseup', saveSelection);
+        editor.addEventListener('keyup', saveSelection);
+    </script>
+
+</body></html>
