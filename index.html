@@ -1,526 +1,888 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en" data-theme="light">
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanilla Rich Text Editor</title>
-    
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
-            --border-color: #cbd5e1;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --panel-bg: #ffffff;
-        }
+    <title>Simple Rich Text - Professional Document & HTML Editor</title>
+    <meta name="description"
+        content="A fast, distraction-free online rich text editor with Markdown shortcuts, visual tables, image uploads, live word count, auto-save, and instant HTML & Markdown exports.">
+    <link rel="canonical" href="https://codefrydev.in/simple-rich-text/">
+    <link rel="stylesheet" href="css/style.css">
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+    <!-- Structured Data (JSON-LD) for Web Application & FAQs - Invisible in UI -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://codefrydev.in/simple-rich-text/#webapp",
+          "name": "Simple Rich Text",
+          "url": "https://codefrydev.in/simple-rich-text/",
+          "applicationCategory": "ProductivityApplication",
+          "operatingSystem": "All modern web browsers",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "description": "Free, browser-based rich text editor featuring Markdown typing shortcuts, visual table manipulation, drag-and-drop image uploads, live word and character count, local auto-save, and instant multi-format exports.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Rich typography and formatting (Bold, Italic, Underline, Strikethrough, Code, Subscript, Superscript)",
+            "Dynamic block formatting (Heading 1 to Heading 4, Quotes, Code Blocks)",
+            "Markdown shortcuts (auto-formatting for #, ##, >, *, 1., and task checkboxes)",
+            "Interactive tables with on-the-fly row and column adding/deleting",
+            "Image handling via file upload, direct URL, drag & drop, and clipboard paste",
+            "Task checklists with toggleable checkboxes",
+            "Real-time word count, character count, and estimated reading time",
+            "Automatic local storage save with instant restoration",
+            "Export to HTML, Markdown, Plain Text, and PDF/Print",
+            "In-editor Find & Replace with match counting",
+            "Dark and light theme toggle",
+            "Comprehensive keyboard shortcuts"
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://codefrydev.in/simple-rich-text/#faq",
+          "url": "https://codefrydev.in/simple-rich-text/",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is Simple Rich Text?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Simple Rich Text is a free, fast, in-browser rich text and HTML editor designed for writers, developers, and creators. It combines visual WYSIWYG formatting with rapid Markdown shortcuts, table editing, image insertion, and multi-format document exporting."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is Simple Rich Text free to use?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, Simple Rich Text is 100% free with no registration, no hidden fees, and no sign-up required."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is my document data private and secure?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Simple Rich Text executes entirely client-side inside your browser. Your documents and edits are saved locally to your browser's localStorage and are never sent or stored on any external server."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do Markdown shortcuts work in the editor?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "While typing at the start of any paragraph, type '# ' for Heading 1, '## ' for Heading 2, '### ' for Heading 3, '> ' for a Blockquote, '* ' or '- ' for a Bulleted List, '1. ' for a Numbered List, or '[] ' for a Task Checklist. The editor will automatically convert your text into the formatted block style."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What formats can I export my document to?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can export your document directly to clean HTML (.html), standard Markdown (.md), plain text (.txt), or print / save as PDF using the browser print dialog."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How can I insert and edit tables?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Click the Table icon on the toolbar to open the grid picker, select your desired rows and columns, and click insert. When clicking inside a table, context controls allow you to add or delete rows and columns seamlessly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I insert images into my document?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can insert images by pasting them directly from your clipboard (Ctrl+V / Cmd+V), dragging and dropping image files into the editor canvas, entering an image URL, or uploading an image file from your device via the toolbar Image modal."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does Simple Rich Text work offline?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Once the page is loaded, the entire editor logic, formatting tools, auto-save engine, and exports work completely offline without needing an active internet connection."
+              }
+            }
+          ]
         }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: #e2e8f0;
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            background-color: var(--panel-bg);
-            width: 100%;
-            max-width: 900px;
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .header {
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-
-        .header p {
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        .editor-wrapper {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .toolbar {
-            background-color: var(--bg-color);
-            padding: 12px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .toolbar-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .toolbar button {
-            background: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-main);
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .toolbar button:hover {
-            background-color: #e2e8f0;
-        }
-
-        .divider {
-            width: 1px;
-            height: 24px;
-            background: var(--border-color);
-            margin: 0 4px;
-        }
-
-        .color-picker-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .color-picker-group input[type="color"] {
-            border: none;
-            width: 24px;
-            height: 24px;
-            padding: 0;
-            background: none;
-            cursor: pointer;
-        }
-
-        .link-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #fff;
-            border: 1px solid var(--border-color);
-            padding: 4px;
-            border-radius: 4px;
-            flex-grow: 1;
-            max-width: 400px;
-        }
-
-        .link-group input[type="text"] {
-            border: none;
-            outline: none;
-            padding: 6px;
-            font-size: 14px;
-            flex-grow: 1;
-            min-width: 150px;
-        }
-
-        .link-group button {
-            background: var(--primary);
-            color: white;
-            border: none;
-        }
-        
-        .link-group button:hover {
-            background: var(--primary-hover);
-        }
-
-        .editor-content {
-            min-height: 300px;
-            padding: 16px;
-            outline: none;
-            line-height: 1.6;
-            overflow-y: auto;
-            background: #fff;
-        }
-
-        .editor-content a {
-            color: var(--primary);
-            text-decoration: underline;
-        }
-
-        /* FIX: If a link is wrapped in a color formatting span/font by the editor, inherit that color */
-        .editor-content span > a,
-        .editor-content font > a,
-        .editor-content [style*="color"] > a {
-            color: inherit;
-        }
-
-        .editor-content[placeholder]:empty:before {
-            content: attr(placeholder);
-            color: #94a3b8;
-            pointer-events: none;
-            display: block;
-        }
-
-        /* HTML Source Code Textarea */
-        .source-code {
-            display: none;
-            width: 100%;
-            min-height: 300px;
-            padding: 16px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            background-color: #1e293b;
-            color: #e2e8f0;
-            border: none;
-            outline: none;
-            resize: vertical;
-        }
-
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .actions-right {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-toggle {
-            background-color: var(--text-main);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-toggle:hover {
-            background-color: #334155;
-        }
-
-        .btn-copy {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-copy:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-clear {
-            background-color: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-clear:hover {
-            background-color: var(--bg-color);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background-color: #1e293b;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            opacity: 0;
-            transition: all 0.3s ease;
-            pointer-events: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-    </style>
+      ]
+    }
+    </script>
 </head>
+
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>Rich Text &amp; HTML Editor</h1>
-            <p>Design visually, pick colors, insert links, or toggle HTML source code.</p>
-        </div>
-
+    <div class="app-container">
+        <!-- Editor Wrapper -->
         <div class="editor-wrapper">
             <!-- Toolbar -->
-            <div class="toolbar" id="toolbar" style="opacity: 1; pointer-events: auto;">
-                <!-- Text Styles -->
+            <div class="toolbar" id="toolbar">
                 <div class="toolbar-row">
-                    <button onclick="formatText('bold')" title="Bold"><b>B</b></button>
-                    <button onclick="formatText('italic')" title="Italic"><i>I</i></button>
-                    <button onclick="formatText('underline')" title="Underline"><u>U</u></button>
-                    <button onclick="formatText('strikeThrough')" title="Strikethrough"><s>S</s></button>
-                    <div class="divider"></div>
-                    <button onclick="formatText('removeFormat')">Clear Format</button>
-                </div>
+                    <!-- Left Sidebar Panel Toggle -->
+                    <button class="toolbar-btn active" id="btnToggleSidebar" title="Toggle Left Tools Panel (Ctrl+\)" data-icon="sidebar"></button>
 
-                <!-- Colors & Links -->
-                <div class="toolbar-row">
-                    <label class="color-picker-group" title="Text Color">
-                        Text <input type="color" id="textColor" oninput="formatText('foreColor', this.value)">
-                    </label>
-                    <label class="color-picker-group" title="Background Color">
-                        Highlight <input type="color" id="bgColor" oninput="formatText('hiliteColor', this.value)">
-                    </label>
                     <div class="divider"></div>
-                    
-                    <div class="link-group">
-                        <input type="text" id="linkInput" placeholder="URL, mailto: or tel:" onfocus="saveSelection()">
-                        <button onclick="insertLink()">Add Link</button>
-                        <button onclick="formatText('unlink')" style="background: transparent; color: var(--text-main); border: 1px solid var(--border-color);">Unlink</button>
+
+                    <!-- History Group -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-undo" title="Undo (Ctrl+Z)"
+                            onclick="window.editor.format('undo')" data-icon="undo"></button>
+                        <button class="toolbar-btn" id="btn-redo" title="Redo (Ctrl+Y / Ctrl+Shift+Z)"
+                            onclick="window.editor.format('redo')" data-icon="redo"></button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Block Format Selector -->
+                    <select class="toolbar-select" id="formatBlockSelect" title="Paragraph Style" style="width: 105px;">
+                        <option value="p">Normal</option>
+                        <option value="h1">Heading 1</option>
+                        <option value="h2">Heading 2</option>
+                        <option value="h3">Heading 3</option>
+                        <option value="h4">Heading 4</option>
+                        <option value="blockquote">Quote</option>
+                        <option value="pre">Code</option>
+                    </select>
+
+                    <!-- Font Family Selector -->
+                    <select class="toolbar-select" id="fontFamilySelect" title="Font Family" style="width: 95px;">
+                        <option value="Inter, sans-serif">Inter</option>
+                        <option value="'Segoe UI', system-ui, sans-serif">System</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'JetBrains Mono', monospace">Mono</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                    </select>
+
+                    <!-- Font Size Selector -->
+                    <select class="toolbar-select" id="fontSizeSelect" title="Font Size" style="width: 72px;">
+                        <option value="">Size</option>
+                        <option value="12px">12px</option>
+                        <option value="14px">14px</option>
+                        <option value="16px">16px</option>
+                        <option value="18px">18px</option>
+                        <option value="24px">24px</option>
+                        <option value="32px">32px</option>
+                    </select>
+
+                    <div class="divider"></div>
+
+                    <!-- Text Styles Group -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-bold" title="Bold (Ctrl+B)"
+                            onclick="window.editor.format('bold')" data-icon="bold"></button>
+                        <button class="toolbar-btn" id="btn-italic" title="Italic (Ctrl+I)"
+                            onclick="window.editor.format('italic')" data-icon="italic"></button>
+                        <button class="toolbar-btn" id="btn-underline" title="Underline (Ctrl+U)"
+                            onclick="window.editor.format('underline')" data-icon="underline"></button>
+                        <button class="toolbar-btn" id="btn-strike" title="Strikethrough"
+                            onclick="window.editor.format('strikeThrough')" data-icon="strikethrough"></button>
+                        <button class="toolbar-btn" id="btn-inline-code" title="Inline Code"
+                            onclick="window.editor.format('inlineCode')" data-icon="code"></button>
+                        <button class="toolbar-btn" id="btn-subscript" title="Subscript"
+                            onclick="window.editor.format('subscript')" data-icon="subscript"></button>
+                        <button class="toolbar-btn" id="btn-superscript" title="Superscript"
+                            onclick="window.editor.format('superscript')" data-icon="superscript"></button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Clear Format -->
+                    <button class="toolbar-btn" id="btn-clear-format" title="Clear Formatting"
+                        onclick="window.editor.format('removeFormat')" data-icon="clearFormat"></button>
+
+                    <div class="divider"></div>
+
+                    <!-- Text & Highlight Color -->
+                    <div class="color-picker-wrapper">
+                        <button class="color-btn" id="textColorBtn" title="Text Color">
+                            <span class="color-swatch-indicator" id="textColorSwatch"
+                                style="background-color: #0f172a;"></span>
+                            <span>Text</span>
+                        </button>
+                        <input type="color" id="textColorInput" class="color-input-hidden" value="#0f172a">
+                    </div>
+
+                    <div class="color-picker-wrapper">
+                        <button class="color-btn" id="bgColorBtn" title="Highlight Color">
+                            <span class="color-swatch-indicator" id="bgColorSwatch"
+                                style="background-color: #fef08a;"></span>
+                            <span>Highlight</span>
+                        </button>
+                        <input type="color" id="bgColorInput" class="color-input-hidden" value="#fef08a">
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Alignment Group -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-align-left" title="Align Left"
+                            onclick="window.editor.format('justifyLeft')" data-icon="alignLeft"></button>
+                        <button class="toolbar-btn" id="btn-align-center" title="Align Center"
+                            onclick="window.editor.format('justifyCenter')" data-icon="alignCenter"></button>
+                        <button class="toolbar-btn" id="btn-align-right" title="Align Right"
+                            onclick="window.editor.format('justifyRight')" data-icon="alignRight"></button>
+                        <button class="toolbar-btn" id="btn-align-justify" title="Justify"
+                            onclick="window.editor.format('justifyFull')" data-icon="alignJustify"></button>
+                        <button class="toolbar-btn" id="btn-outdent" title="Outdent"
+                            onclick="window.editor.format('outdent')" data-icon="outdent"></button>
+                        <button class="toolbar-btn" id="btn-indent" title="Indent"
+                            onclick="window.editor.format('indent')" data-icon="indent"></button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Lists & Checklist Group -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-list-bullet" title="Bulleted List"
+                            onclick="window.editor.format('insertUnorderedList')" data-icon="listBullet"></button>
+                        <button class="toolbar-btn" id="btn-list-ordered" title="Numbered List"
+                            onclick="window.editor.format('insertOrderedList')" data-icon="listOrdered"></button>
+                        <button class="toolbar-btn" id="btn-checklist" title="Task Checklist"
+                            onclick="window.editor.format('checklist')" data-icon="checkSquare"></button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Media & Inserts Group -->
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-insert-link" title="Insert / Edit Link (Ctrl+K)"
+                            onclick="window.ModalManager.openLinkModal()" data-icon="link"></button>
+                        <button class="toolbar-btn" id="btn-insert-image" title="Insert Image"
+                            onclick="window.ModalManager.openImageModal()" data-icon="image"></button>
+                        <button class="toolbar-btn" id="btn-insert-table" title="Insert Table"
+                            onclick="window.ModalManager.openTableModal()" data-icon="table"></button>
+                        <button class="toolbar-btn" id="btn-insert-hr" title="Horizontal Divider"
+                            onclick="window.editor.format('horizontalRule')" data-icon="hr"></button>
                     </div>
                 </div>
             </div>
 
-            <!-- Visual Editor Area -->
-            <div id="editor" class="editor-content" contenteditable="true" placeholder="Start typing here... 
-Example: Type 'Call us' -&gt; highlight it -&gt; type 'tel:+1234567890' in the link box -&gt; click 'Add Link'." style="display: block;"><span>
-  <a href="tel:+1234567890">Call</a>,
-  <a href="mailto:hello@example.com"><font color="#b61616">email</font></a>,
-  or
-  <a href="/enquiry" style="background-color: rgb(255, 255, 255);">fill in our enquiry form</a>
-  and tell us what you're looking for.
-</span>
-</div>
-            
-            <!-- Raw HTML Source Area -->
-            <textarea id="sourceCode" class="source-code" spellcheck="false" style="display: none;"></textarea>
+            <!-- Find & Replace Floating / Collapsible Bar -->
+            <div class="find-replace-bar" id="findReplaceBar">
+                <div class="find-input-group">
+                    <span data-icon="search"></span>
+                    <input type="text" id="findInput" placeholder="Find in document..."
+                        oninput="window.ModalManager.performSearch()">
+                    <span class="match-counter" id="matchCounter">0 matches</span>
+                </div>
+                <div class="find-input-group" style="max-width: 260px;">
+                    <input type="text" id="replaceInput" placeholder="Replace with...">
+                </div>
+                <label
+                    style="font-size: 12px; display: flex; align-items: center; gap: 4px; color: var(--text-muted); cursor: pointer;">
+                    <input type="checkbox" id="matchCaseCheck" onchange="window.ModalManager.performSearch()"> Match
+                    case
+                </label>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" title="Previous match" onclick="window.ModalManager.findPrev()"
+                        style="font-size: 11px;">▲</button>
+                    <button class="toolbar-btn" title="Next match" onclick="window.ModalManager.findNext()"
+                        style="font-size: 11px;">▼</button>
+                </div>
+                <button class="btn-action" onclick="window.ModalManager.replaceCurrent()">Replace</button>
+                <button class="btn-action" onclick="window.ModalManager.replaceAll()">Replace All</button>
+                <button class="toolbar-btn" title="Close" onclick="window.ModalManager.closeFindReplace()"
+                    data-icon="close"></button>
+            </div>
+
+            <!-- Workspace Area: Left Sidebar + Editor Canvas -->
+            <div class="editor-workspace">
+                <!-- Left Side Panel (Navigator, Quick Blocks & Drafts) -->
+                <aside class="editor-sidebar" id="editorSidebar">
+                    <!-- Sidebar Header with Tabs -->
+                    <div class="sidebar-header">
+                        <div class="sidebar-tabs">
+                            <button class="sidebar-tab-btn active" data-tab="outline" title="Document Outline (TOC)">
+                                <span data-icon="listTree"></span>
+                                <span>Outline</span>
+                            </button>
+                            <button class="sidebar-tab-btn" data-tab="blocks" title="Quick Insert Blocks">
+                                <span data-icon="layout"></span>
+                                <span>Insert</span>
+                            </button>
+                            <button class="sidebar-tab-btn" data-tab="drafts" title="Saved Drafts & Stats">
+                                <span data-icon="folder"></span>
+                                <span>Drafts</span>
+                            </button>
+                        </div>
+                        <button class="sidebar-icon-btn" id="btnCloseSidebar" title="Collapse Panel (Ctrl+\)" data-icon="chevronLeft"></button>
+                    </div>
+
+                    <!-- Sidebar Content Panes -->
+                    <div class="sidebar-body">
+                        <!-- Pane 1: Document Outline (Live Table of Contents) -->
+                        <div class="sidebar-pane active" id="tab-outline">
+                            <div class="sidebar-pane-header">
+                                <span class="pane-title">Table of Contents</span>
+                                <span class="pane-subtitle">Click heading to jump directly</span>
+                            </div>
+                            <div class="sidebar-scrollable" id="sidebarOutlineList">
+                                <!-- Populated dynamically by SidebarManager -->
+                            </div>
+                        </div>
+
+                        <!-- Pane 2: Quick Block Inserter -->
+                        <div class="sidebar-pane" id="tab-blocks">
+                            <div class="sidebar-pane-header">
+                                <span class="pane-title">Quick Insert Blocks</span>
+                                <span class="pane-subtitle">One-click insert at cursor</span>
+                            </div>
+                            <div class="sidebar-scrollable">
+                                <div class="blocks-section">
+                                    <div class="blocks-section-label">Headings</div>
+                                    <div class="blocks-grid">
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('h1')">
+                                            <span class="block-badge">H1</span>
+                                            <div class="block-info">
+                                                <strong>Heading 1</strong>
+                                                <span>Main section title</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('h2')">
+                                            <span class="block-badge">H2</span>
+                                            <div class="block-info">
+                                                <strong>Heading 2</strong>
+                                                <span>Medium subsection</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('h3')">
+                                            <span class="block-badge">H3</span>
+                                            <div class="block-info">
+                                                <strong>Heading 3</strong>
+                                                <span>Sub-topic header</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="blocks-section">
+                                    <div class="blocks-section-label">Callouts & Notes</div>
+                                    <div class="blocks-grid">
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('callout', 'note')">
+                                            <span class="block-emoji">💡</span>
+                                            <div class="block-info">
+                                                <strong>Note Callout</strong>
+                                                <span>Highlight key takeaway</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('callout', 'warning')">
+                                            <span class="block-emoji">⚠️</span>
+                                            <div class="block-info">
+                                                <strong>Warning Callout</strong>
+                                                <span>Caution or alert box</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('callout', 'success')">
+                                            <span class="block-emoji">✅</span>
+                                            <div class="block-info">
+                                                <strong>Success Callout</strong>
+                                                <span>Tips or done notice</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('quote')">
+                                            <span class="block-emoji">💬</span>
+                                            <div class="block-info">
+                                                <strong>Blockquote</strong>
+                                                <span>Quoted passage</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="blocks-section">
+                                    <div class="blocks-section-label">Components & Media</div>
+                                    <div class="blocks-grid">
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('table')">
+                                            <span class="block-icon" data-icon="table"></span>
+                                            <div class="block-info">
+                                                <strong>Data Table</strong>
+                                                <span>Insert structured table</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('image')">
+                                            <span class="block-icon" data-icon="image"></span>
+                                            <div class="block-info">
+                                                <strong>Image Upload</strong>
+                                                <span>Insert via file or URL</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('code')">
+                                            <span class="block-icon" data-icon="code"></span>
+                                            <div class="block-info">
+                                                <strong>Code Block</strong>
+                                                <span>Preformatted syntax</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('checklist')">
+                                            <span class="block-icon" data-icon="checkSquare"></span>
+                                            <div class="block-info">
+                                                <strong>Task Checklist</strong>
+                                                <span>Interactive checkbox list</span>
+                                            </div>
+                                        </button>
+                                        <button class="block-card" onclick="window.SidebarManager.insertBlock('hr')">
+                                            <span class="block-icon" data-icon="hr"></span>
+                                            <div class="block-info">
+                                                <strong>Horizontal Rule</strong>
+                                                <span>Content divider line</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pane 3: Saved Drafts & Document Metrics -->
+                        <div class="sidebar-pane" id="tab-drafts">
+                            <div class="sidebar-pane-header">
+                                <span class="pane-title">Drafts & Snapshots</span>
+                                <span class="pane-subtitle">Local browser restore points</span>
+                            </div>
+
+                            <div class="drafts-actions-bar">
+                                <button class="sidebar-action-btn primary" id="btnSaveSnapshot">
+                                    <span data-icon="plus"></span>
+                                    <span>Save Snapshot</span>
+                                </button>
+                                <button class="sidebar-action-btn secondary" id="btnNewDocument">
+                                    <span data-icon="fileText"></span>
+                                    <span>New Blank</span>
+                                </button>
+                            </div>
+
+                            <div class="sidebar-stats-section" id="sidebarDocStats">
+                                <!-- Populated by SidebarManager -->
+                            </div>
+
+                            <div class="sidebar-section-divider"></div>
+
+                            <div class="sidebar-scrollable" id="sidebarDraftsList">
+                                <!-- Populated dynamically by SidebarManager -->
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Editor Main Area -->
+                <div class="editor-container">
+                <!-- Visual Contenteditable Canvas -->
+                <div id="editor" class="editor-content" contenteditable="true"
+                    placeholder="Start typing or use Markdown shortcuts (#, ##, -, 1., >)...">
+                    <h1>Welcome to Simple Rich Text</h1>
+                    <p>
+                        A modern, high-performance editor designed for seamless documentation, note-taking, and content
+                        creation.
+                        Try formatting text with <b>Bold</b>, <i>Italic</i>, <u>Underline</u>, <s>Strikethrough</s>, or
+                        <code>inline code</code>.
+                    </p>
+
+                    <blockquote>
+                        "Simplicity is the ultimate sophistication." — Leonardo da Vinci
+                    </blockquote>
+
+                    <h3>Interactive Task List</h3>
+                    <ul class="task-list">
+                        <li class="task-item"><input type="checkbox" checked contenteditable="false"> <span
+                                class="completed">Design modern user interface with dark mode support</span></li>
+                        <li class="task-item"><input type="checkbox" checked contenteditable="false"> <span>Implement
+                                rich tables, images, and Markdown typing shortcuts</span></li>
+                        <li class="task-item"><input type="checkbox" contenteditable="false"> <span>Export to HTML,
+                                Markdown, or print directly to PDF</span></li>
+                    </ul>
+
+                    <h3>Structured Table Example</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Shortcut</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Insert Link</td>
+                                <td>Ctrl + K / Cmd + K</td>
+                                <td>Supported</td>
+                            </tr>
+                            <tr>
+                                <td>Find & Replace</td>
+                                <td>Ctrl + F / Cmd + F</td>
+                                <td>Supported</td>
+                            </tr>
+                            <tr>
+                                <td>Save Draft</td>
+                                <td>Ctrl + S / Cmd + S</td>
+                                <td>Instant</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        Need to reach out? <a href="tel:+1234567890">Call us directly</a>, <a
+                            href="mailto:hello@example.com">
+                            <font color="#b61616">send an email</font>
+                        </a>, or <a href="/enquiry">fill out our enquiry form</a>.
+                    </p>
+                </div>
+
+                <!-- Raw HTML Source Area -->
+                <textarea id="sourceCode" class="source-code" spellcheck="false"
+                    placeholder="Enter HTML source code..."></textarea>
+
+                <!-- Floating Link Preview Chip -->
+                <div class="floating-tooltip" id="linkTooltip">
+                    <span data-icon="link"></span>
+                    <a id="linkTooltipUrl" href="#" target="_blank"></a>
+                    <button class="toolbar-btn" title="Open Link"
+                        onclick="window.open(document.getElementById('linkTooltipUrl').href, '_blank')"
+                        data-icon="externalLink"></button>
+                    <button class="toolbar-btn" title="Edit Link" onclick="window.ModalManager.openLinkModal()"
+                        data-icon="edit"></button>
+                    <button class="toolbar-btn" title="Unlink" onclick="window.ModalManager.removeLink()"
+                        data-icon="unlink"></button>
+                </div>
+
+                <!-- Floating Table Context Quick Actions -->
+                <div class="table-context-toolbar" id="tableContextToolbar">
+                    <button class="toolbar-btn" title="Insert Row Above"
+                        onclick="window.ModalManager.insertRow('above')">+Row ↑</button>
+                    <button class="toolbar-btn" title="Insert Row Below"
+                        onclick="window.ModalManager.insertRow('below')">+Row ↓</button>
+                    <div class="divider"></div>
+                    <button class="toolbar-btn" title="Insert Column Left"
+                        onclick="window.ModalManager.insertColumn('left')">+Col ←</button>
+                    <button class="toolbar-btn" title="Insert Column Right"
+                        onclick="window.ModalManager.insertColumn('right')">+Col →</button>
+                    <div class="divider"></div>
+                    <button class="toolbar-btn" title="Delete Row"
+                        onclick="window.ModalManager.deleteCurrentRow()">-Row</button>
+                    <button class="toolbar-btn" title="Delete Column"
+                        onclick="window.ModalManager.deleteCurrentColumn()">-Col</button>
+                    <button class="toolbar-btn" title="Delete Table" onclick="window.ModalManager.deleteActiveTable()"
+                        data-icon="trash"></button>
+                </div>
+            </div> <!-- end .editor-workspace -->
         </div>
 
-        <div class="actions">
-            <button class="btn-toggle" id="toggleViewBtn" onclick="toggleView()">View HTML Source</button>
-            <div class="actions-right">
-                <button class="btn-clear" onclick="clearEditor()">Clear</button>
-                <button class="btn-copy" onclick="copyContent()">Copy Output</button>
+        <!-- Footer Status Bar -->
+        <footer class="app-footer">
+            <div class="status-left">
+                <div class="metric-pill">
+                    <span id="statWords">0</span>
+                    <span>words</span>
+                </div>
+                <div class="metric-pill">
+                    <span id="statChars">0</span>
+                    <span>chars</span>
+                </div>
+                <div class="metric-pill">
+                    <span id="statReadingTime">0 min read</span>
+                </div>
+                <div class="save-status">
+                    <span class="save-dot" id="saveDot"></span>
+                    <span id="saveText">Draft saved</span>
+                </div>
+            </div>
+
+            <div class="status-right">
+                <button class="btn-action" id="toggleViewBtn">
+                    <span data-icon="codeFile"></span>
+                    <span>View HTML Source</span>
+                </button>
+
+                <!-- Hidden file import -->
+                <input type="file" id="fileImportInput" accept=".html,.htm,.md,.txt" style="display: none;">
+                <button class="btn-action" title="Import HTML, Markdown, or Text"
+                    onclick="document.getElementById('fileImportInput').click()">
+                    <span data-icon="upload"></span>
+                    <span>Import</span>
+                </button>
+
+                <!-- Export Dropdown -->
+                <div class="dropdown">
+                    <button class="btn-action" id="exportMenuBtn" title="Export document">
+                        <span data-icon="download"></span>
+                        <span>Export ▾</span>
+                    </button>
+                    <div class="dropdown-menu" id="exportDropdown">
+                        <button class="dropdown-item" onclick="window.ExportManager.exportHTML()">
+                            <span data-icon="codeFile"></span> Export HTML (.html)
+                        </button>
+                        <button class="dropdown-item" onclick="window.ExportManager.exportMarkdown()">
+                            <span data-icon="edit"></span> Export Markdown (.md)
+                        </button>
+                        <button class="dropdown-item" onclick="window.ExportManager.exportPlainText()">
+                            <span data-icon="edit"></span> Export Plain Text (.txt)
+                        </button>
+                        <button class="dropdown-item" onclick="window.ExportManager.printDocument()">
+                            <span data-icon="printer"></span> Print / Save PDF
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn-action" id="clearBtn">
+                    <span data-icon="trash"></span>
+                    <span>Clear</span>
+                </button>
+
+                <button class="btn-action btn-primary" id="copyBtn">
+                    <span data-icon="copy"></span>
+                    <span>Copy Output</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- 1. Link Modal -->
+    <div class="modal-backdrop" id="linkModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Insert or Edit Link</h3>
+                <button class="btn-icon" onclick="window.ModalManager.closeAllModals()" data-icon="close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="linkModalUrl">Destination URL / Address</label>
+                    <input type="text" id="linkModalUrl" class="form-control"
+                        placeholder="https://example.com, mailto: or tel:">
+                </div>
+                <div class="form-group">
+                    <label for="linkModalText">Text to Display (optional)</label>
+                    <input type="text" id="linkModalText" class="form-control" placeholder="Descriptive text...">
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="linkModalTarget" checked>
+                    <label for="linkModalTarget" style="margin: 0; cursor: pointer;">Open link in a new tab</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" onclick="window.ModalManager.closeAllModals()">Cancel</button>
+                <button class="btn-action btn-primary" onclick="window.ModalManager.saveLink()">Apply Link</button>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="toast">Action successful!</div>
+    <!-- 2. Image Modal -->
+    <div class="modal-backdrop" id="imageModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Insert Image</h3>
+                <button class="btn-icon" onclick="window.ModalManager.closeAllModals()" data-icon="close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="imageUrlInput">Image Web URL</label>
+                    <input type="text" id="imageUrlInput" class="form-control"
+                        placeholder="https://example.com/photo.jpg">
+                </div>
+                <div class="form-group">
+                    <label>Or Upload from Device</label>
+                    <input type="file" id="imageFileInput" class="form-control" accept="image/*"
+                        onchange="window.ModalManager.handleImageFileSelect(event)">
+                </div>
+                <div id="imagePreviewContainer" style="display: none; text-align: center;">
+                    <img id="imageModalPreview" src="" alt="Preview"
+                        style="max-height: 140px; border-radius: 8px; border: 1px solid var(--border-color);">
+                </div>
+                <div class="form-group">
+                    <label for="imageAltInput">Alt Description Text</label>
+                    <input type="text" id="imageAltInput" class="form-control"
+                        placeholder="Descriptive description for accessibility">
+                </div>
+                <div class="form-group">
+                    <label for="imageAlignSelect">Alignment</label>
+                    <select id="imageAlignSelect" class="form-control">
+                        <option value="center">Center</option>
+                        <option value="left">Left</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" onclick="window.ModalManager.closeAllModals()">Cancel</button>
+                <button class="btn-action btn-primary" onclick="window.ModalManager.saveImage()">Insert Image</button>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        const editor = document.getElementById('editor');
-        const sourceCode = document.getElementById('sourceCode');
-        const toast = document.getElementById('toast');
-        const toolbar = document.getElementById('toolbar');
-        const toggleViewBtn = document.getElementById('toggleViewBtn');
-        const linkInput = document.getElementById('linkInput');
+    <!-- 3. Table Modal -->
+    <div class="modal-backdrop" id="tableModal">
+        <div class="modal-card" style="max-width: 380px;">
+            <div class="modal-header">
+                <h3>Insert Table</h3>
+                <button class="btn-icon" onclick="window.ModalManager.closeAllModals()" data-icon="close"></button>
+            </div>
+            <div class="modal-body" style="align-items: center; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-muted);">Hover to choose dimensions:</p>
+                <div class="table-grid-picker" id="tableGridPicker"></div>
+                <div id="gridSizeLabel" style="font-size: 13px; font-weight: 600; color: var(--text-main);">3 rows x 3
+                    cols</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" onclick="window.ModalManager.closeAllModals()">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-        let isSourceView = false;
-        let savedRange = null;
+    <!-- 4. Keyboard Shortcuts Modal -->
+    <div class="modal-backdrop" id="shortcutsModal">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Keyboard Shortcuts & Markdown Triggers</h3>
+                <button class="btn-icon" onclick="window.ModalManager.closeAllModals()" data-icon="close"></button>
+            </div>
+            <div class="modal-body" style="max-height: 480px; overflow-y: auto;">
+                <table class="shortcuts-table">
+                    <tbody>
+                        <tr>
+                            <td><strong>Bold</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">B</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Italic</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">I</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Underline</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">U</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Insert Link</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">K</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Find & Replace</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">F</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Save Draft</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">S</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Undo</strong></td>
+                            <td><span class="kbd">Ctrl</span> / <span class="kbd">⌘</span> + <span class="kbd">Z</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redo</strong></td>
+                            <td><span class="kbd">Ctrl</span> + <span class="kbd">Y</span> or <span class="kbd">⌘</span>
+                                + <span class="kbd">Shift</span> + <span class="kbd">Z</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Heading 1</strong></td>
+                            <td>Type <span class="kbd">#</span> + <span class="kbd">Space</span> at start of line</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Heading 2</strong></td>
+                            <td>Type <span class="kbd">##</span> + <span class="kbd">Space</span> at start of line</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Heading 3</strong></td>
+                            <td>Type <span class="kbd">###</span> + <span class="kbd">Space</span> at start of line</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Blockquote</strong></td>
+                            <td>Type <span class="kbd">&gt;</span> + <span class="kbd">Space</span> at start of line
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bulleted List</strong></td>
+                            <td>Type <span class="kbd">-</span> or <span class="kbd">*</span> + <span
+                                    class="kbd">Space</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Numbered List</strong></td>
+                            <td>Type <span class="kbd">1.</span> + <span class="kbd">Space</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Task Item</strong></td>
+                            <td>Type <span class="kbd">[]</span> + <span class="kbd">Space</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action btn-primary" onclick="window.ModalManager.closeAllModals()">Got it</button>
+            </div>
+        </div>
+    </div>
 
-        // Execute formatting commands
-        function formatText(command, value = null) {
-            if (isSourceView) return; // Disable toolbar in source view
-            
-            // CRITICAL FIX: Restore selection before applying formatting.
-            // Opening OS color pickers causes the browser to lose text highlight selection.
-            restoreSelection();
-            
-            // Standardizing background color command for different browsers
-            if (command === 'hiliteColor' && !document.queryCommandSupported('hiliteColor')) {
-                command = 'backColor';
-            }
-            
-            document.execCommand(command, false, value);
-            
-            // Save the newly formatted selection
-            saveSelection();
-            editor.focus();
-        }
+    <!-- Toast Notification -->
+    <div class="toast-container">
+        <div id="toast" class="toast">Action completed successfully</div>
+    </div>
 
-        // We need to save the selection before the user clicks into the link input box, 
-        // otherwise the browser forgets what text to turn into a link.
-        function saveSelection() {
-            if (window.getSelection) {
-                const sel = window.getSelection();
-                if (sel.getRangeAt && sel.rangeCount) {
-                    savedRange = sel.getRangeAt(0);
-                }
-            }
-        }
+    <!-- Script Modules -->
+    <script src="js/icons.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/app.js"></script>
 
-        function restoreSelection() {
-            if (savedRange) {
-                if (window.getSelection) {
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(savedRange);
-                }
-            }
-        }
+    <!-- Deferred Analytics & Tracking -->
+    <script type="text/javascript">
+        (function () {
+            // Prevent the script from loading more than once
+            let trackingLoaded = false;
 
-        // Insert link logic
-        function insertLink() {
-            if (isSourceView) return;
-            
-            const url = linkInput.value.trim();
-            if (!url) {
-                showToast('Please enter a URL, mailto:, or tel: link');
-                return;
-            }
+            function loadTrackingScripts() {
+                if (trackingLoaded) return;
+                trackingLoaded = true;
 
-            // Bring focus back to editor and restore the highlighted text
-            editor.focus();
-            restoreSelection();
+                // 1. Load Google Analytics (gtag.js)
+                const gaScript = document.createElement('script');
+                gaScript.async = true;
+                gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-VM01Q3R43D';
+                document.head.appendChild(gaScript);
 
-            // Apply the link
-            document.execCommand('createLink', false, url);
-            
-            // Clear input box
-            linkInput.value = '';
-            savedRange = null;
-        }
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-VM01Q3R43D');
 
-        // Toggle between WYSIWYG and HTML Raw Source
-        function toggleView() {
-            if (isSourceView) {
-                // Switching back to visual editor
-                editor.innerHTML = sourceCode.value;
-                sourceCode.style.display = 'none';
-                editor.style.display = 'block';
-                toolbar.style.opacity = '1';
-                toolbar.style.pointerEvents = 'auto';
-                toggleViewBtn.textContent = 'View HTML Source';
-            } else {
-                // Switching to HTML source code view
-                // Clean up empty tags and format slightly if needed
-                let currentHTML = editor.innerHTML;
-                sourceCode.value = currentHTML;
-                
-                editor.style.display = 'none';
-                sourceCode.style.display = 'block';
-                toolbar.style.opacity = '0.5';
-                toolbar.style.pointerEvents = 'none';
-                toggleViewBtn.textContent = 'View Visual Editor';
-            }
-            isSourceView = !isSourceView;
-        }
+                // 2. Load Microsoft Clarity
+                (function (c, l, a, r, i, t, y) {
+                    c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+                    t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+                    y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+                })(window, document, "clarity", "script", "mxr4hxioh4");
 
-        function clearEditor() {
-            if (isSourceView) {
-                sourceCode.value = '';
-            } else {
-                editor.innerHTML = '';
-            }
-            showToast('Editor cleared');
-        }
-
-        // Copy content function 
-        async function copyContent() {
-            let html, plainText;
-
-            if (isSourceView) {
-                // If in source view, just copy the raw HTML code as text
-                plainText = sourceCode.value;
-                if (plainText.trim() === '') {
-                    showToast('Editor is empty!');
-                    return;
-                }
-                try {
-                    await navigator.clipboard.writeText(plainText);
-                    showToast('HTML Source copied!');
-                } catch (err) {
-                    showToast('Failed to copy');
-                }
-                return;
-            }
-
-            // If in visual view, copy both Rich Text and Plain text
-            html = editor.innerHTML;
-            plainText = editor.innerText;
-
-            if (plainText.trim() === '' && html.trim() === '') {
-                showToast('Editor is empty!');
-                return;
-            }
-
-            try {
-                const htmlBlob = new Blob([html], { type: 'text/html' });
-                const textBlob = new Blob([plainText], { type: 'text/plain' });
-                const clipboardItem = new ClipboardItem({
-                    'text/html': htmlBlob,
-                    'text/plain': textBlob
+                // Clean up event listeners once loaded
+                ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (event) {
+                    window.removeEventListener(event, loadTrackingScripts);
                 });
-
-                await navigator.clipboard.write([clipboardItem]);
-                showToast('Rich text copied successfully!');
-            } catch (err) {
-                console.warn('Clipboard API failed, falling back to basic text copy.', err);
-                try {
-                    await navigator.clipboard.writeText(plainText);
-                    showToast('Copied as plain text (browser limitation)');
-                } catch (fallbackErr) {
-                    showToast('Failed to copy content');
-                }
             }
-        }
 
-        function showToast(message) {
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
+            // Attach event listeners to trigger the tracking
+            ['scroll', 'mousemove', 'touchstart', 'keydown', 'click'].forEach(function (event) {
+                window.addEventListener(event, loadTrackingScripts, { once: true, passive: true });
+            });
 
-        // Save selection whenever mouse is released inside editor
-        editor.addEventListener('mouseup', saveSelection);
-        editor.addEventListener('keyup', saveSelection);
+            // Fallback: Load after 5 seconds even if the user does nothing (optional but recommended)
+            setTimeout(loadTrackingScripts, 5000);
+        })();
     </script>
+</body>
 
-</body></html>
+</html>
